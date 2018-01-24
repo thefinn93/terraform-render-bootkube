@@ -6,6 +6,7 @@ resource "template_dir" "bootstrap-manifests" {
   vars {
     hyperkube_image = "${var.container_images["hyperkube"]}"
     etcd_servers    = "${join(",", formatlist("https://%s:2379", var.etcd_servers))}"
+    api_server_port = "${var.api_server_port}"
 
     cloud_provider = "${var.cloud_provider}"
     pod_cidr       = "${var.pod_cidr}"
@@ -26,6 +27,7 @@ resource "template_dir" "manifests" {
     kubedns_sidecar_image  = "${var.container_images["kubedns_sidecar"]}"
 
     etcd_servers = "${join(",", formatlist("https://%s:2379", var.etcd_servers))}"
+    api_server_port = "${var.api_server_port}"
 
     cloud_provider        = "${var.cloud_provider}"
     pod_cidr              = "${var.pod_cidr}"
@@ -34,7 +36,7 @@ resource "template_dir" "manifests" {
     kube_dns_service_ip   = "${cidrhost(var.service_cidr, 10)}"
 
     ca_cert            = "${base64encode(var.ca_certificate == "" ? join(" ", tls_self_signed_cert.kube-ca.*.cert_pem) : var.ca_certificate)}"
-    server             = "${format("https://%s:443", element(var.api_servers, 0))}"
+    server             = "${format("https://%s:%s", element(var.api_servers, 0), var.api_server_port)}"
     apiserver_key      = "${base64encode(tls_private_key.apiserver.private_key_pem)}"
     apiserver_cert     = "${base64encode(tls_locally_signed_cert.apiserver.cert_pem)}"
     serviceaccount_pub = "${base64encode(tls_private_key.service-account.public_key_pem)}"
@@ -65,7 +67,7 @@ data "template_file" "kubeconfig" {
     ca_cert      = "${base64encode(var.ca_certificate == "" ? join(" ", tls_self_signed_cert.kube-ca.*.cert_pem) : var.ca_certificate)}"
     kubelet_cert = "${base64encode(tls_locally_signed_cert.kubelet.cert_pem)}"
     kubelet_key  = "${base64encode(tls_private_key.kubelet.private_key_pem)}"
-    server       = "${format("https://%s:443", element(var.api_servers, 0))}"
+    server       = "${format("https://%s:%s", element(var.api_servers, 0), var.api_server_port)}"
   }
 }
 
@@ -77,6 +79,6 @@ data "template_file" "user-kubeconfig" {
     ca_cert      = "${base64encode(var.ca_certificate == "" ? join(" ", tls_self_signed_cert.kube-ca.*.cert_pem) : var.ca_certificate)}"
     kubelet_cert = "${base64encode(tls_locally_signed_cert.kubelet.cert_pem)}"
     kubelet_key  = "${base64encode(tls_private_key.kubelet.private_key_pem)}"
-    server       = "${format("https://%s:443", element(var.api_servers, 0))}"
+    server       = "${format("https://%s:%s", element(var.api_servers, 0), var.api_server_port)}"
   }
 }

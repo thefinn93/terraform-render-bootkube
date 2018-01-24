@@ -8,6 +8,12 @@ variable "api_servers" {
   type        = "list"
 }
 
+variable "api_server_port" {
+  description = "The port that the API servers will listen on"
+  type        = "string"
+  default     = 443
+}
+
 variable "etcd_servers" {
   description = "List of URLs used to reach etcd servers."
   type        = "list"
